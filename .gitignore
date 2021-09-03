@@ -1,0 +1,9 @@
+elpa*
+.bookmarks.el
+.emacs.desktop
+.org-id-locations
+.session
+.smex-items
+auto-save-list/*
+org-roam.db
+history
