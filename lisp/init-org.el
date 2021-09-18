@@ -119,13 +119,39 @@ typical word processor."
 ;;; Capturing
 
 (global-set-key (kbd "C-c c") 'org-capture)
+(with-eval-after-load 'org-capture
+  (defun org-hugo-new-subtree-post-capture-template ()
+    "Returns `org-capture' template string for new Hugo post.
+    See `org-capture-templates' for more information."
+    (let* (;; http://www.holgerschurig.de/en/emacs-blog-from-org-to-hugo/
+           (date (format-time-string (org-time-stamp-format :long :inactive) (org-current-time)))
+           (title (read-from-minibuffer "Post Title: ")) ;Prompt to enter the post title
+           (fname (org-hugo-slug title)))
+      (mapconcat #'identity
+                 `(
+                   ,(concat "** TODO " title "     :@随笔:")
+                   ":PROPERTIES:"
+                   ,(concat ":EXPORT_FILE_NAME: " fname)
+                   ;; ,(concat ":EXPORT_DATE: " date) ;Enter current date and time
+                   ":END:"
+                   "%?\n")          ;Place the cursor here finally
+                 "\n")))
+  (setq org-capture-templates
+        `(("t" "todo" entry (file "") ; "" => `org-default-notes-file'
+           "* NEXT %?\n%U\n" :clock-resume t)
+          ("n" "note" entry (file "")
+           "* %? :NOTE:\n%U\n%a\n" :clock-resume t)
+          ("h"                ;`org-capture' binding + h
+           "Hugo post"
+           entry
+           ;; It is assumed that below file is present in `org-directory'
+           ;; and that it has a "Blog Ideas" heading. It can even be a
+           ;; symlink pointing to the actual location of all-posts.org!
+           ;;(file+headline "~/Dropbox/Write/blog/orgpost/0000-posts.org" "INBOX")
+           (function org-hugo-new-subtree-post-capture-template))
+          ))
+  )
 
-(setq org-capture-templates
-      `(("t" "todo" entry (file "")  ; "" => `org-default-notes-file'
-         "* NEXT %?\n%U\n" :clock-resume t)
-        ("n" "note" entry (file "")
-         "* %? :NOTE:\n%U\n%a\n" :clock-resume t)
-        ))
 
 
 
@@ -423,6 +449,7 @@ typical word processor."
 ;; 	     (buffer-string)))
 ;;           (file-name-nondirectory source)))
 ;; (advice-add #'org-html--format-image :override #'org-org-html--format-image)
+
 
 (provide 'init-org)
 ;;; init-org.el ends here

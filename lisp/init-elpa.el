@@ -15,10 +15,6 @@
 
 ;;; Standard package repositories
 
-(add-to-list 'package-archives '( "melpa" . "https://melpa.org/packages/") t)
-(add-to-list 'package-archives '( "melpa" . "https://elpa.emacs-china.org/melpa/") t)
-
-
 (setq package-archives '(("gnu"   . "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
                          ("melpa" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")))
 

@@ -28,8 +28,12 @@
   :init
   (setq org-roam-v2-ack t)
   :custom
-  (setq org-roam-directory "~/org-roam/")
+  (make-directory "~/org-roam")
+  (setq org-roam-db-gc-threshold most-positive-fixnum)
+  (setq org-roam-directory "~/org-roam")
   (setq org-roam-completion-everywhere t)
+  (setq org-roam-v2-ack t)
+  (setq org-roam-ui-mode nil)
   (add-hook 'after-init-hook 'org-roam-mode)
   :bind (("C-c n l" . org-roam-buffer-toggle)
          ("C-c n f" . org-roam-node-find)
@@ -38,22 +42,25 @@
          ("C-M-i" . completion-at-point))
   :config
   (org-roam-setup)
-
-  (use-package websocket
-    :ensure t)
-  (use-package simple-httpd
-    :ensure t)
-  (add-to-list 'load-path "~/.emacs.d/site-lisp/org-roam-ui")
-  (load-library "org-roam-ui")
-  (use-package org-roam-ui
-    :after org-roam
-    :config
-    (setq org-roam-ui-sync-theme t
-          org-roam-ui-follow t
-          org-roam-ui-follow-mode t
-          org-roam-ui-update-on-save t
-          org-roam-ui-open-on-start t))
+  (setq org-roam-capture-templates
+        '(("d" "default" plain "%?" :if-new
+           (file+head "${slug}.org" "#+title: ${title}\n")
+           :unnarrowed t)
+          )
+        )
   )
+
+(use-package deft
+  :ensure t
+  :defer t
+  :after org
+  :bind
+  ("C-c n d" . deft)
+  :custom
+  (deft-recursive t)
+  (deft-use-filter-string-for-filename t)
+  (deft-default-extension "org")
+  (deft-directory org-roam-directory))
 
 (provide 'init-roam)
 ;;; init-roam.el ends here
