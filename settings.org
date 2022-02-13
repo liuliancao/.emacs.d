@@ -1,7 +1,7 @@
 #+title: liuliancao's emacs settings
 #+author: liuliancao
 #+email: liuliancao@gmail.com
-#+last_modified: [2022-02-03 23:47]
+#+last_modified: [2022-02-12 22:11]
 #+options: num:nil
 
 * Liuliancao's Emacs Settings
@@ -9,8 +9,9 @@
 #+begin_src emacs-lisp
   (require 'package)
   (setq package-archives '(("gnu" . "http://mirrors.ustc.edu.cn/elpa/gnu/")
-                           ("melpa" . "http://mirrors.ustc.edu.cn/elpa/melpa/")
-                           ("nongnu" . "http://mirrors.ustc.edu.cn/elpa/nongnu")))
+			   ("melpa" . "http://mirrors.ustc.edu.cn/elpa/melpa/")
+			   ))
+  ;;("nongnu" . "http://mirrors.ustc.edu.cn/elpa/nongnu")
 
   (setq package-user-dir (expand-file-name (format "elpa-%s.%s" emacs-major-version emacs-minor-version) user-emacs-directory))
   (package-initialize)
@@ -18,9 +19,9 @@
       (package-refresh-contents)
       (package-install 'use-package))
   (use-package diminish
-        :ensure t)
+	:ensure t)
   (use-package bind-key
-        :ensure t)
+	:ensure t)
 #+end_src
 ** Menus Related
 #+begin_src emacs-lisp
@@ -147,8 +148,19 @@
   (setq-default custom-enabled-themes '(sanityinc-tomorrow-bright))
   )
 #+end_src
+** Bash Path Related
+#+begin_src emacs-lisp
+  ;; (use-package exec-path-from-shell
+  ;;   :ensure t
+  ;;   :init
+  ;;   (exec-path-from-shell-initialize)
+  ;;   :config
+  ;;   (exec-path-from-shell-copy-env "PYTHONPATH")
+  ;;   (exec-path-from-shell-copy-env "HTTP_PROXY")
+  ;;   (exec-path-from-shell-copy-env "HTTPS_PROXY"))
+#+end_src
 ** Custom file Related
-否则会自动生成在init.el，看起来不方便
+   否则会自动生成在init.el，看起来不方便
 #+begin_src emacs-lisp
 (setq custom-file (concat user-emacs-directory "custom.el"))
 (load custom-file 'noerror)
@@ -274,6 +286,19 @@ switch-window切换窗口比较好用
   ;;:ensure t)
 )
 #+end_src   
+** Snippets Related
+#+begin_src emacs-lisp
+  (use-package yasnippet
+    :ensure t
+    :init
+    (add-hook 'prog-mode-hook 'yas-minor-mode)
+    (add-hook 'org-mode-hook 'yas-minor-mode)
+    :config
+    (yas-reload-all)
+    (use-package yasnippet-snippets
+      :ensure t))
+#+end_src
+
 ** Visual mode Related
 一列或者多列集体编辑，参考vim的visual mode
 #+begin_src emacs-lisp
@@ -391,6 +416,7 @@ switch-window切换窗口比较好用
 
 ;; add support export markdown
 (with-eval-after-load 'org
+  (require 'ox-md nil t)
   (use-package org-re-reveal
     :ensure t
     :config
@@ -409,6 +435,17 @@ switch-window切换窗口比较好用
       time-stamp-format " [%04Y-%02m-%02d %02H:%02M]")
 (add-hook 'before-save-hook 'time-stamp nil)
 
+;; latex something
+(setq org-latex-pdf-process
+      '(
+        "xelatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+        "rm -fr %b.out %b.log %b.tex auto"
+        ))
+(setq org-latex-compiler "xelatex")
+(setq-default TeX-engine 'xetex)
+(setq-default TeX-PDF-mode t)
+(setq TeX-command-default "XeLaTeX")
+(add-hook 'LaTeX-mode-hook 'linum-mode)
 #+end_src
 ** Note Related
 #+begin_src emacs-lisp
@@ -466,13 +503,31 @@ switch-window切换窗口比较好用
     :ensure t)
   )
 #+end_src
+** Git Related
+magit相关
+#+begin_src emacs-lisp
+(use-package magit
+  :ensure t
+  :config
+  (global-set-key (kbd "C-x g") 'magit-status)
+  :after
+  (fullframe magit-status magit-mode-quit-window))
+#+end_src
 ** C/C++ Related
+lsp-mode的后端有cquery, clangd, ccls，我用的ccls(https://github.com/MaskRay/ccls/wiki/lsp-mode)
+
+就是你启用的哪个，lsp会从里面遍历
 #+begin_src emacs-lisp
 (use-package ccls
   :ensure t
   :hook ((c-mode c++-mode objec-mode cuda-mode) . (lambda () (require 'ccls) (lsp))))
 #+end_src
 ** Golang Related
+安装gopls
+#+begin_src sh
+go get golang.org/x/tools/gopls@latest
+#+end_src
+
 #+begin_src emacs-lisp
 (use-package go-mode
   :ensure t
@@ -536,9 +591,14 @@ switch-window切换窗口比较好用
     :hook (python-mode . pipenv-mode))
 
 #+end_src
-** Lsp Related
+** Angular Related
 #+begin_src emacs-lisp
-
+(use-package ng2-mode
+  :ensure t)
+#+end_src
+** Lsp Related
+我使用lsp的原因是它是一个框架，整体比较简单，C、Go、Python配置起来都不难
+#+begin_src emacs-lisp
   (use-package lsp-mode
   :commands lsp
   :bind
@@ -551,6 +611,7 @@ switch-window切换窗口比较好用
   :commands company-lsp)
 #+end_src
 ** Terraform Related
+terraform接触的比较多，整体用起来挺好的，主要对齐等比较方便
 #+begin_src emacs-lisp
 (use-package terraform-mode
   :ensure t
@@ -562,7 +623,7 @@ switch-window切换窗口比较好用
   :ensure t
   :config
   (reformatter-define terraform-format
-    :program "terraform" :args '("fmt" ))
+    :program "terraform" :args '("fmt" "-"))
   )
 )
 #+end_src
@@ -588,4 +649,99 @@ switch-window切换窗口比较好用
 #+begin_src emacs-lisp
 (add-hook 'doc-view-mode-hook (lambda ()
   (linum-mode -1)))
+#+end_src
+默认情况下emacs读pdf目前看是比较慢的，和默认渲染成PNG图片有关，读SRE那本书，
+
+总是加载要挺久，不过记笔记非常方便，可以相像下，分屏，左边pdf，右边笔记本
+
+** Music Related
+我用的网易云音乐，这个是国人开发的，厉害。上班时候，打开编辑器，听歌开始美妙的一天~
+#+begin_src emacs-lisp
+  (use-package async
+    :pin melpa
+    :ensure t)
+  (use-package netease-cloud-music
+    :ensure t)
+#+end_src   
+M-x netease-cloud-music-download-api下载api程序用于登录
+
+M-x netease-cloud-music进入netease-cloud-music， 按l登录
+
+输入用户名密码，就好了, 登录进去以后会看到用户，按u查找自己的歌单
+
+C-x h选中歌单，按RET（回车），就加到歌单了
+
+按?可以查看模式下常用的命令，n p前一首下一首
+
+** RSS Related
+#+begin_src emacs-lisp
+  (use-package elfeed
+    :ensure t
+    :init
+    (global-set-key (kbd "C-x w") 'elfeed)
+    )
+  (use-package elfeed-org
+    :ensure t
+    :config
+    (elfeed-org)
+    (setq rmh-elfeed-org-files (list "~/Documents/rss/elfeed.org")))
+#+end_src
+
+我的订阅，比较简单，但是养成一个每天读rss的习惯挺好的，慢慢习惯就好了
+
+#+begin_src sh
+# blogs
+http://lanbing510.info/pages/atom.xml
+http://www.ruanyifeng.com/blog/atom.xml
+http://feed.williamlong.info/
+http://linux.cn/rss.xml
+http://www.raychase.net/feed
+http://sspai.com/feed
+https://feed.infoq.com/cn/mbnmnbm/
+http://noops.me/?feed=rss2
+# emacs
+http://www.reddit.com/r/emacs/.rss
+http://planet.emacsen.org/atom.xml
+# my blog
+https://blog.liuliancao.com/rss.xml
+# security
+http://www.cvedetails.com/vulnerability-feeds-form.php
+#+end_src
+
+** Email Related
+#+begin_src emacs-lisp
+  (use-package with-proxy
+    :ensure t)
+  (use-package gnus
+    :ensure t
+    :config
+    ;; gmail accounts
+    ;; (setq user-email-address "liuliancao@gmail.com")
+    ;; (setq user-full-name "liuliancao")
+    ;; (setq gnus-select-method
+    ;;       '(nnimap "gmail"
+    ;;                (nnimap-address "imap.gmail.com")
+    ;;                (nnimap-server-port 993)
+    ;;                (nnimap-stream ssl)))
+    ;; (setq smtpmail-smtp-server "smtp.gmail.com")
+    ;; (setq smtp-smtp-service 587)
+    ;; (setq message-mail-function 'smtpmail-send-it)
+    ;; (setq gnus-message-archive-group nil)
+    ;; (setq mml-secure-openpgp-encrypt-to-self t)
+    ;; (add-hook 'message-setup-hook 'mml-secure-message-encrypt)
+    (setq gnus-select-method
+      '(nnimap "qqmail"
+               (nnimap-address "imap.qq.com")
+               (nnimap-user "luqixue@qq.com") ;; atention nnimap-user must be full with @
+               (nnimap-server-port 993)
+               (nnimap-stream ssl)
+               ))
+     (setq send-mail-function 'smtpmail-send-it
+            user-mail-address "luqixue@qq.com"
+            user-full-name "lqx"
+            smtpmail-smtp-server "smtp.qq.com"
+            smtpmail-smtp-service 465
+            smtpmail-stream-type 'ssl
+            )
+      )
 #+end_src
