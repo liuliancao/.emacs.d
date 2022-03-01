@@ -1,7 +1,7 @@
 #+title: liuliancao's emacs settings
 #+author: liuliancao
 #+email: liuliancao@gmail.com
-#+last_modified: [2022-02-12 22:11]
+#+last_modified: [2022-02-28 16:10]
 #+options: num:nil
 
 * Liuliancao's Emacs Settings
@@ -313,35 +313,42 @@ switch-window切换窗口比较好用
    
 ** Search Related
 #+begin_src emacs-lisp
-(use-package ivy
-  :ensure t
-  :diminish (ivy-mode . "")
-  :config
-  (ivy-mode 1)
-  (setq ivy-use-virtual-buffers t)
-  (setq enable-recursive-minibuffers t)
-  (setq ivy-height 10)
-  (setq ivy-initial-inputs-alist nil)
-  (setq ivy-count-format "%d/%d")
-  (setq ivy-re-builders-alist '((t . ivy--regex-ignore-order))))
+  (use-package ivy
+    :ensure t
+    :diminish (ivy-mode . "")
+    :config
+    (ivy-mode 1)
+    (setq ivy-use-virtual-buffers t)
+    (setq enable-recursive-minibuffers t)
+    (setq ivy-height 10)
+    (setq ivy-initial-inputs-alist nil)
+    (setq ivy-count-format "%d/%d")
+    (setq ivy-re-builders-alist '((t . ivy--regex-ignore-order))))
 
-(use-package counsel
-  :ensure t
-  :bind (("M-x" . counsel-M-x)
-	 ("C-x C-f" . counsel-find-file)))
+  (use-package counsel
+    :ensure t
+    :bind (("M-x" . counsel-M-x)
+           ("C-x C-f" . counsel-find-file)))
 
-(use-package swiper
-  :ensure t
-  :bind (("C-s" . swiper)))
+  (use-package swiper
+    :ensure t
+    :bind (("C-s" . swiper)))
 
-(use-package anzu
-  :ensure t
-  :config
-  (add-hook 'after-init-hook 'global-anzu-mode)
-  (setq anzu-mode-lighter "")
-  (global-set-key [remap query-replace-regexp] 'anzu-query-replace-regexp)
-  (global-set-key [remap query-replace] 'anzu-query-replace)
-)
+  (use-package anzu
+    :ensure t
+    :config
+    (add-hook 'after-init-hook 'global-anzu-mode)
+    (setq anzu-mode-lighter "")
+    (global-set-key [remap query-replace-regexp] 'anzu-query-replace-regexp)
+    (global-set-key [remap query-replace] 'anzu-query-replace)
+  )
+  ;; shortcut tips 
+  (use-package which-key
+    :ensure t
+    :diminish t
+    :config
+    (add-hook 'after-init-hook 'which-key-mode)
+    )
 #+end_src
 ** Buffers Related
 #+begin_src emacs-lisp
@@ -423,6 +430,7 @@ switch-window切换窗口比较好用
     (setq org-re-reveal-root "https://cdn.bootcdn.net/ajax/libs/reveal.js/3.9.2/"
     org-re-reveal-revealjs-version "3.8")
   )
+  (auto-fill-mode)
 )
 
 ;; add ditaa setting with apt-get install ditaa
@@ -491,6 +499,7 @@ switch-window切换窗口比较好用
 #+begin_src emacs-lisp
 (use-package projectile
   :diminish projectile-mode
+  :ensure t
   :bind-keymap
   ("C-c p" . projectile-command-map)
   :config
@@ -500,6 +509,8 @@ switch-window切换窗口比较好用
   (when (executable-find "rg")
     (setq-default projectile-generic-command "rg --files --hidden"))
   (use-package ibuffer-projectile
+    :ensure t)
+  (use-package ag
     :ensure t)
   )
 #+end_src
@@ -521,6 +532,8 @@ lsp-mode的后端有cquery, clangd, ccls，我用的ccls(https://github.com/Mask
 (use-package ccls
   :ensure t
   :hook ((c-mode c++-mode objec-mode cuda-mode) . (lambda () (require 'ccls) (lsp))))
+(use-package xcscope
+:ensure t)
 #+end_src
 ** Golang Related
 安装gopls
@@ -561,35 +574,39 @@ go get golang.org/x/tools/gopls@latest
 
 ** Python Related
 #+begin_src emacs-lisp
-;; pip3 install python-lsp-server[all] pylsp-rope
-  (use-package python
-    :ensure t
-    :mode ("\\.py\\'" . python-mode)
-    :hook (python-mode . lsp-deferred)
-    :interpreter ("python" . python-mode)
-    :config
-    (setq indent-tabs-mode nil)
-    (setq python-indent-offset 4)
-    (use-package py-autopep8
+  ;; pip3 install python-lsp-server[all] pylsp-rope
+    (use-package python
       :ensure t
-      :hook ((python-mode . py-autopep8-enable-on-save)))
-    (use-package company-jedi
-      :ensure t
+      :mode ("\\.py\\'" . python-mode)
+      :hook (python-mode . lsp-deferred)
+      :interpreter ("python" . python-mode)
       :config
-      (add-hook 'python-mode-hook 'jedi:setup)
+      (setq indent-tabs-mode nil)
+      (setq python-indent-offset 4)
+      (use-package py-autopep8
+        :ensure t
+        :hook ((python-mode . py-autopep8-enable-on-save)))
+      (use-package company-jedi
+        :ensure t
+        :config
+        (add-hook 'python-mode-hook 'jedi:setup)
+        )
       )
-    )
 
-  (use-package elpy
+    (use-package elpy
+      :ensure t
+      :commands (elpy-enable)
+      :config
+      (setq eply-rpc-backend "jedi"))
+
+    (use-package pipenv
+      :ensure t
+      :hook (python-mode . pipenv-mode))
+
+    (use-package yapfify
     :ensure t
-    :commands (elpy-enable)
     :config
-    (setq eply-rpc-backend "jedi"))
-
-  (use-package pipenv
-    :ensure t
-    :hook (python-mode . pipenv-mode))
-
+    (add-hook 'python-mode-hook 'yapf-mode))
 #+end_src
 ** Angular Related
 #+begin_src emacs-lisp
@@ -608,7 +625,21 @@ go get golang.org/x/tools/gopls@latest
   :ensure t
   :commands lsp-ui-mode)
   (use-package company-lsp
-  :commands company-lsp)
+    :commands company-lsp)
+  (use-package autoinsert
+    :ensure t
+    :init (auto-insert-mode t)
+    :config
+    (define-auto-insert '(python-mode . "Python skeleton")
+      '("Auto insert python heading: "
+        "#!/usr/bin/env python3" \n
+        "# -*- coding: utf-8 -*-" \n
+        "# Date: " (substring (current-time-string)) \n
+        "# Author: " (progn user-full-name) " <lqx@wooduan.com>" \n
+        "# Copyright (c) @wooduan-ops" \n
+        "\"\"\"Description: something.\"\"\"" \n \n
+        ))
+    )
 #+end_src
 ** Terraform Related
 terraform接触的比较多，整体用起来挺好的，主要对齐等比较方便
@@ -744,4 +775,42 @@ http://www.cvedetails.com/vulnerability-feeds-form.php
             smtpmail-stream-type 'ssl
             )
       )
+#+end_src
+
+** Mermaid Workflow Related
+[[https://mermaid-js.github.io/mermaid/#/][mermaid官方文档]] mermaid是比较全面的绘图工具
+[[https://github.com/arnm/ob-mermaid/blob/master/README.org][ob-mermaid文档]]
+#+begin_src sh
+sudo npm install -g @mermaid-js/mermaid-cli
+#+end_src
+#+begin_src emacs-lisp
+  (use-package ob-mermaid
+	       :ensure t)
+#+end_src
+
+#+begin_src mermaid :file ../mermaid-demo.png :theme forest
+   graph TD;
+       A-->B;
+       A-->C;
+       B-->D;
+       C-->D;  
+#+end_src
+
+#+RESULTS:
+[[file:../mermaid-demo.png]]
+
+** Plantuml Related
+#+begin_src emacs-lisp
+  (use-package plantuml-mode
+    :ensure t
+    :config
+    (setq plantuml-default-exec-mode 'jar)
+    (add-to-list 'auto-mode-alist '("\\.plantuml\\'" . plantuml-mode))
+    (setq org-plantuml-jar-path
+	  (expand-file-name "~/plantuml-1.2022.1.jar"))
+    )
+  (use-package flycheck-plantuml
+    :ensure t
+    :config
+    (flycheck-plantuml-setup))
 #+end_src
