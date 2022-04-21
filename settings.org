@@ -1,290 +1,134 @@
 #+title: liuliancao's emacs settings
 #+author: liuliancao
 #+email: liuliancao@gmail.com
-#+last_modified: [2022-02-28 16:10]
+#+last_modified: [2022-04-20 09:31]
 #+options: num:nil
 
 * Liuliancao's Emacs Settings
 ** Packages Related
 #+begin_src emacs-lisp
-  (require 'package)
+(use-package package
+  :ensure nil
+  :config
   (setq package-archives '(("gnu" . "http://mirrors.ustc.edu.cn/elpa/gnu/")
 			   ("melpa" . "http://mirrors.ustc.edu.cn/elpa/melpa/")
 			   ))
-  ;;("nongnu" . "http://mirrors.ustc.edu.cn/elpa/nongnu")
-
-  (setq package-user-dir (expand-file-name (format "elpa-%s.%s" emacs-major-version emacs-minor-version) user-emacs-directory))
   (package-initialize)
   (unless (package-installed-p 'use-package)
       (package-refresh-contents)
       (package-install 'use-package))
+  )
   (use-package diminish
-	:ensure t)
-  (use-package bind-key
 	:ensure t)
 #+end_src
 ** Menus Related
 #+begin_src emacs-lisp
-(menu-bar-mode -1)
-(show-paren-mode t)
-(setq use-file-dialog nil)
-(setq use-dialog-box nil)
-(setq inhibit-startup-screen t)
-(setq-default
- window-resize-pixelwise t
- frame-resize-pixelwise t)
-
-(when (fboundp 'tool-bar-mode)
-  (tool-bar-mode -1))
-(when (fboundp 'set-scroll-bar-mode)
-  (set-scroll-bar-mode nil))
-
-(let ((no-border '(internal-border-width . 0)))
-  (add-to-list 'default-frame-alist no-border)
-  (add-to-list 'initial-frame-alist no-border))
-
-(use-package scratch
-  :ensure t)
-(use-package command-log-mode
-  :ensure t)
-
-(electric-pair-mode t)
-(setq-default indent-tabs-mode nil)
-(use-package rainbow-mode
-  :ensure t
-  :diminish t
-  :hook ((prog-mode . rainbow-mode)
-         (help-mode . rainbow-mode))
-  :config
-  (use-package rainbow-delimiters
+  ;;(setq-default auto-fill-function 'do-auto-fill)
+  (setq inhibit-startup-screen t)
+  (use-package scratch
+    :ensure t)
+  (use-package command-log-mode
+    :ensure t)
+  (use-package rainbow-mode
     :ensure t
     :diminish t
-    :hook (prog-mode . rainbow-delimiters-mode)
+    :hook ((prog-mode . rainbow-mode)
+	   (help-mode . rainbow-mode))
+    :config
+    (use-package rainbow-delimiters
+      :ensure t
+      :diminish t
+      :hook (prog-mode . rainbow-delimiters-mode)
+      )
     )
+  (setq-default initial-scratch-message
+		(concat ";; Happy hacking, " user-login-name " - Emacs ♥ you!\n\n"))
+  ;; add blink line
+  (use-package beacon
+    :ensure t
+    :config
+    (add-hook 'after-init-hook 'beacon-mode)
   )
-(setq-default initial-scratch-message
-              (concat ";; Happy hacking, " user-login-name " - Emacs ♥ you!\n\n"))
-
-(setq-default 
- blink-cursor-interval 0.4
- bookmark-default-file (expand-file-name ".bookmarks.el" user-emacs-directory)
- buffers-menu-max-size 30
- column-number-mode t
- indent-tabs-mode nil
- create-lockfiles nil
- auto-save-default nil
- make-backup-files nil
- scroll-preserve-screen-position 'always
- truncate-lines nil
-)
-;; add blink line
-(use-package beacon
-  :ensure t
-  :config
-  (add-hook 'after-init-hook 'beacon-mode)
-)
-
-(global-set-key (kbd "RET") 'newline-and-indent)
-(use-package subword
-  :ensure t
-  :diminish t
-  :config
-  (add-hook 'after-init-hook 'subword-mode)
-)
-(add-hook 'after-init-hook 'auto-fill-mode)
-
-(when (fboundp 'display-line-numbers-mode)
-  (setq-default display-line-numbers-width 3)
-  (add-hook 'prog-mode-hook 'display-line-numbers-mode))
-
-(use-package symbol-overlay
-  :ensure t
-  :diminish t
-  :hook ((prog-mode-hook html-mode-hook yaml-mode-hook conf-mode-hook) . symbol-overlay-mode)
-  :config
-  (define-key symbol-overlay-mode-map (kbd "M-i") 'symbol-overlay-put)
-  (define-key symbol-overlay-mode-map (kbd "M-I") 'symbol-overlay-remove-all)
-  (define-key symbol-overlay-mode-map (kbd "M-n") 'symbol-overlay-jump-next)
-  (define-key symbol-overlay-mode-map (kbd "M-p") 'symbol-overlay-jump-prev)
-)
-
-(fset 'yes-or-no-p 'y-or-n-p)
-(use-package session
-  :ensure t
-  :config
-  (setq session-save-file (expand-file-name ".session" user-emacs-directory))
-  (setq session-name-disable-regexp "\\(?:\\`'/tmp\\|\\.git/[A-Z_]+\\'\\)")
-  (setq session-save-file-coding-system 'utf-8)
-  (add-hook 'after-init-hook 'session-initialize)
-)
-#+end_src
-
-** White spaces Related
-#+begin_src emacs-lisp
-(use-package whitespace-cleanup-mode
-  :ensure t
-  :diminish t
-  :config
-  (add-hook 'after-init-hook 'global-whitespace-cleanup-mode)
-  (add-to-list 'whitespace-cleanup-mode-ignore-modes 'markdown-mode)
-)
-(global-set-key [remap just-one-space] 'cycle-spacing)
-#+end_src
-
-** GC Related
-#+begin_src emacs-lisp
-(setq gc-cons-threshold (* 128 1024 1024))
-(add-hook 'emacs-startup-hook
-  (lambda () (setq gc-cons-threshold (* 20 1024 1024))))
-  
-#+end_src
-** Theme Related
-我比较喜欢这个主题，emacs自己也有很多主题，可以load-theme查看
-#+begin_src emacs-lisp
-(use-package color-theme-sanityinc-tomorrow
-  :ensure t
-  :config
-  (setq custom-safe-themes t)
-  (setq-default custom-enabled-themes '(sanityinc-tomorrow-bright))
-  )
-#+end_src
-** Bash Path Related
-#+begin_src emacs-lisp
-  ;; (use-package exec-path-from-shell
-  ;;   :ensure t
-  ;;   :init
-  ;;   (exec-path-from-shell-initialize)
-  ;;   :config
-  ;;   (exec-path-from-shell-copy-env "PYTHONPATH")
-  ;;   (exec-path-from-shell-copy-env "HTTP_PROXY")
-  ;;   (exec-path-from-shell-copy-env "HTTPS_PROXY"))
+  ;; use y or n to yes and no
+  (fset 'yes-or-no-p 'y-or-n-p)
+  (use-package switch-window
+    :ensure t
+    :config
+    (setq-default switch-window-shortcut-style 'alphabet)
+    (setq-default switch-window-timeout nil)
+    (global-set-key (kbd "C-x o") 'switch-window)
+    )
 #+end_src
 ** Custom file Related
    否则会自动生成在init.el，看起来不方便
 #+begin_src emacs-lisp
 (setq custom-file (concat user-emacs-directory "custom.el"))
 (load custom-file 'noerror)
+;; let eww visit url
+(setq browse-url-browser-function 'eww-browse-url)
 #+end_src
-** Window Related
-C-c left, C-c right可以恢复之前的窗口，个人认为还是比较方便的
-
-switch-window切换窗口比较好用
+** Tmp file Related
+否则会在目录下面生成临时文件
 #+begin_src emacs-lisp
-(winner-mode t)
-(use-package switch-window
-  :ensure t
-  :config
-  (setq-default switch-window-shortcut-style 'alphabet)
-  (setq-default switch-window-timeout nil)
-  (global-set-key (kbd "C-x o") 'switch-window)
-)
-#+end_src
-** Backup Related
-#+begin_src emacs-lisp
-(defconst emacs-tmp-dir (format "%s/%s%s/" temporary-file-directory "emacs" (user-uid)))
-(setq backup-directory-alist
-`((".*" . ,emacs-tmp-dir)))
-(setq auto-save-file-name-transforms
-`((".*" ,emacs-tmp-dir t)))
-(setq auto-save-list-file-prefix emacs-tmp-dir)
-
-(setq desktop-path (list user-emacs-directory)
-      desktop-auto-save-timeout 600)
-(desktop-save-mode 1)
-
-(setq-default history-length 1000)
-(add-hook 'after-init-hook 'savehist-mode)
-
-(setq desktop-globals-to-save
-      '((comint-input-ring        . 50)
-        (compile-history          . 30)
-        desktop-missing-file-warning
-        (dired-regexp-history     . 20)
-        (extended-command-history . 30)
-        (face-name-history        . 20)
-        (file-name-history        . 100)
-        (grep-find-history        . 30)
-        (grep-history             . 30)
-        (ivy-history              . 100)
-        (magit-revision-history   . 50)
-        (minibuffer-history       . 50)
-        (org-clock-history        . 50)
-        (org-refile-history       . 50)
-        (org-tags-history         . 50)
-        (query-replace-history    . 60)
-        (read-expression-history  . 60)
-        (regexp-history           . 60)
-        (regexp-search-ring       . 20)
-        register-alist
-        (search-ring              . 20)
-        (shell-command-history    . 50)
-        tags-file-name
-        tags-table-list))
-
-#+end_src
-** Dired Related
-#+begin_src emacs-lisp
-(use-package diff-hl
-  :ensure t)
-(add-hook 'dired-mode-hook 'diff-hl-dired-mode)
-(setq-default dired-dwim-target t)
-(use-package diredfl
-  :ensure t)
-(diredfl-global-mode)
-(require 'dired-x)
+  (setq backup-directory-alist
+	    `(("." . ,(concat user-emacs-directory "backups"))))
 #+end_src
 
 ** Complete Related
-使用经典的company组件
+使用company组件
 #+begin_src emacs-lisp
-(use-package company
-  :ensure t
-  :bind (:map company-active-map
-              ("M-n" . nil)
-              ("M-p" . nil)
-              ("C-n" . company-select-next)
-              ("C-p" . company-select-previous))
-  :diminish t
-  :config
-  (global-company-mode t)
-  (setq company-idle-delay 0)
-  (setq company-tooltip-limit 10)
-  (setq company-echo-delay 0)
-  (setq company-minimum-prefix-length 2)
-  (setq company-begin-commands '(self-insert-command))
-  (setq company-backends
-        '((company-files
-           company-yasnippet
-           company-keywords
-           company-capf)
-          (company-abbrev company-dabbrev)))
-  (defvar my-company-point nil)
-  (advice-add 'company-complete-common :before (lambda () (setq my-company-point (point))))
-  (advice-add 'company-complete-common :after (lambda ()
-  		  				(when (equal my-company-point (point))
-  			  			  (yas-expand))))
-  )
+  (use-package company
+    :ensure t
+    :bind (:map company-active-map
+		("M-n" . nil)
+		("M-p" . nil)
+		("C-n" . company-select-next)
+		("C-p" . company-select-previous))
+    :diminish t
+    :config
+    (global-company-mode t)
+    (setq company-idle-delay 0)
+    (setq company-tooltip-limit 10)
+    (setq company-echo-delay 0)
+    (setq company-minimum-prefix-length 2)
+    (setq company-dabbrev-downcase nil)
+    (setq company-begin-commands '(self-insert-command))
+    (setq company-backends
+	  '((company-files
+	     company-yasnippet
+	     company-keywords
+	     company-capf)
+	    (company-abbrev company-dabbrev)))
+    (defvar my-company-point nil)
+    (advice-add 'company-complete-common :before (lambda () (setq my-company-point (point))))
+    (advice-add 'company-complete-common :after (lambda ()
+						  (when (equal my-company-point (point))
+						    (yas-expand))))
+    )
 
-(use-package company-quickhelp  :ensure t)
+  (use-package company-quickhelp  :ensure t)
 
-(add-hook 'emacs-lisp-mode-hook
-          (lambda ()
-            (add-to-list (make-local-variable 'company-backends)
-                         '(company-elisp company-yasnippet)))
-          )
-(add-hook 'prog-mode-hook #'hs-minor-mode)
+  (add-hook 'emacs-lisp-mode-hook
+	    (lambda ()
+	      (add-to-list (make-local-variable 'company-backends)
+			   '(company-elisp company-yasnippet)))
+	    )
+  (add-hook 'prog-mode-hook #'hs-minor-mode)
 #+end_src
+** Locale Related
+#+begin_src emacs-lisp
+(set-default-coding-systems 'utf-8)
+#+end_src
+
 ** Grammer check Related
 #+begin_src emacs-lisp
-(use-package flycheck
-  :ensure t
-  :config
-  (add-hook 'prog-mode-hook 'flycheck-mode)
-  ;;(add-hook 'flycheck-mode-hook 'flycheck-list-errors)
-  ;;(flycheck-color-mode-line-mode)
-  ;;(use-package flycheck-color-mode-line
-  ;;:ensure t)
-)
+  (use-package flycheck
+    :ensure t
+    :config
+    (add-hook 'prog-mode-hook 'flycheck-mode)
+    (use-package flycheck-aspell
+      :ensure t)
+  )
 #+end_src   
 ** Snippets Related
 #+begin_src emacs-lisp
@@ -350,149 +194,148 @@ switch-window切换窗口比较好用
     (add-hook 'after-init-hook 'which-key-mode)
     )
 #+end_src
-** Buffers Related
-#+begin_src emacs-lisp
-(require 'uniquify)
-
-(setq uniquify-buffer-name-style 'reverse)
-(setq uniquify-separator " • ")
-(setq uniquify-after-kill-buffer-p t)
-(setq uniquify-ignore-buffers-re "^\\*")
-
-(use-package fullframe
-  :ensure t)
-#+end_src
 ** Org mode Related
 #+begin_src emacs-lisp
-(org-reload)
-(with-eval-after-load 'org-agenda
-  ;;(setq org-agenda-files (find-lisp-find-files "~/todo/" "\.org$"))
-  (setq org-agenda-files (list "~/todo/inbox.org"
-                               "~/todo/done.org"
-                               "~/todo/task.org"
-                               "~/todo/project.org"))
+  (org-reload)
+  (with-eval-after-load 'org-agenda
+    ;;(setq org-agenda-files (find-lisp-find-files "~/todo/" "\.org$"))
+    (setq org-agenda-files (list "~/todo/inbox.org"
+				 "~/todo/done.org"
+				 "~/todo/task.org"
+				 "~/todo/project.org"))
 
-  (setq org-default-notes-file "~/todo/task.org")
+    (setq org-default-notes-file "~/todo/task.org")
+    )
+  (use-package org-cliplink
+    :ensure t)
+  (define-key global-map (kbd "C-c a") 'org-agenda)
+  (define-key global-map (kbd "C-c c") 'org-capture)
+
+  (setq org-capture-templates
+	`(("t" "todo" entry (file "")  ; "" => `org-default-notes-file'
+	   "* NEXT %?\n%U\n" :clock-resume t)
+	  ("n" "note" entry (file "")
+	   "* %? :NOTE:\n%U\n%a\n" :clock-resume t)
+	  ))
+
+  (setq org-todo-keywords
+	(quote ((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!/!)")
+		(sequence "PROJECT(p)" "|" "DONE(d!/!)" "CANCELLED(c@/!)")
+		(sequence "WAITING(w@/!)" "DELEGATED(e!)" "HOLD(h)" "|" "CANCELLED(c@/!)")))
+	org-todo-repeat-to-state "NEXT")
+
+  (add-hook 'org-agenda-mode-hook 'hl-line-mode)
+
+  (use-package ob-go
+    :ensure t)
+  (use-package ob-http
+    :ensure t)
+  (with-eval-after-load 'org
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     `((R . t)
+       (ditaa . t)
+       (dot . t)
+       (C . t)
+       (emacs-lisp . t)
+       (gnuplot . t)
+       (haskell . nil)
+       (latex . t)
+       (ledger . t)
+       (go . t)
+       (ocaml . nil)
+       (octave . t)
+       (plantuml . t)
+       (python . t)
+       (ruby . t)
+       (http . t)
+       (screen . nil)
+       (,(if (locate-library "ob-sh") 'sh 'shell) . t)
+       (sql . t)
+       (sqlite . t))))
+
+  ;; add support export markdown
+  (with-eval-after-load 'org
+    (require 'ox-md nil t)
+    (use-package org-re-reveal
+      :ensure t
+      :config
+      (setq org-re-reveal-root "https://cdn.bootcdn.net/ajax/libs/reveal.js/3.9.2/"
+      org-re-reveal-revealjs-version "3.8")
+    )
+    (setq diary-file "~/diary")
   )
-(use-package org-cliplink
-  :ensure t)
-(define-key global-map (kbd "C-c a") 'org-agenda)
 
-(setq org-capture-templates
-      `(("t" "todo" entry (file "")  ; "" => `org-default-notes-file'
-         "* NEXT %?\n%U\n" :clock-resume t)
-        ("n" "note" entry (file "")
-         "* %? :NOTE:\n%U\n%a\n" :clock-resume t)
-        ))
+  ;; add ditaa setting with apt-get install ditaa
+  (setq org-ditaa-jar-path (expand-file-name "/usr/share/ditaa/ditaa.jar"))
+  ;; change for _
+  (setq org-export-with-sub-superscripts (quote {}))
+  (setq time-stamp-active t
+	time-stamp-start "#\\+last_modified:"
+	time-stamp-end "$"
+	time-stamp-format " [%04Y-%02m-%02d %02H:%02M]")
+  (add-hook 'before-save-hook 'time-stamp nil)
 
-(setq org-todo-keywords
-      (quote ((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!/!)")
-              (sequence "PROJECT(p)" "|" "DONE(d!/!)" "CANCELLED(c@/!)")
-              (sequence "WAITING(w@/!)" "DELEGATED(e!)" "HOLD(h)" "|" "CANCELLED(c@/!)")))
-      org-todo-repeat-to-state "NEXT")
-        
-(add-hook 'org-agenda-mode-hook 'hl-line-mode)
+  ;; latex something
+  (setq org-latex-pdf-process
+	'(
+	  "xelatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+	  "rm -fr %b.out %b.log %b.tex auto"
+	  ))
+  (setq org-latex-compiler "xelatex")
+  (setq-default TeX-engine 'xetex)
+  (setq-default TeX-PDF-mode t)
+  (setq TeX-command-default "XeLaTeX")
+  (add-hook 'LaTeX-mode-hook 'linum-mode)
 
-(use-package ob-go
-  :ensure t)
-(use-package ob-http
-  :ensure t)
-(with-eval-after-load 'org
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   `((R . t)
-     (ditaa . t)
-     (dot . t)
-     (C . t)
-     (emacs-lisp . t)
-     (gnuplot . t)
-     (haskell . nil)
-     (latex . t)
-     (ledger . t)
-     (go . t)
-     (ocaml . nil)
-     (octave . t)
-     (plantuml . t)
-     (python . t)
-     (ruby . t)
-     (http . t)
-     (screen . nil)
-     (,(if (locate-library "ob-sh") 'sh 'shell) . t)
-     (sql . t)
-     (sqlite . t))))
-
-;; add support export markdown
-(with-eval-after-load 'org
-  (require 'ox-md nil t)
-  (use-package org-re-reveal
+  (use-package org-tree-slide
+    :ensure t)
+  (use-package habitica
     :ensure t
-    :config
-    (setq org-re-reveal-root "https://cdn.bootcdn.net/ajax/libs/reveal.js/3.9.2/"
-    org-re-reveal-revealjs-version "3.8")
-  )
-  (auto-fill-mode)
-)
+    :init
+    (setq habitica-uid (getenv "HABITICA_UID"))
+    (setq habitica-token (getenv "HABITICA_TOKEN"))
+    )
 
-;; add ditaa setting with apt-get install ditaa
-(setq org-ditaa-jar-path (expand-file-name "/usr/share/ditaa/ditaa.jar"))
-;; change for _
-(setq org-export-with-sub-superscripts (quote {}))
-(setq time-stamp-active t
-      time-stamp-start "#\\+last_modified:"
-      time-stamp-end "$"
-      time-stamp-format " [%04Y-%02m-%02d %02H:%02M]")
-(add-hook 'before-save-hook 'time-stamp nil)
-
-;; latex something
-(setq org-latex-pdf-process
-      '(
-        "xelatex -shell-escape -interaction nonstopmode -output-directory %o %f"
-        "rm -fr %b.out %b.log %b.tex auto"
-        ))
-(setq org-latex-compiler "xelatex")
-(setq-default TeX-engine 'xetex)
-(setq-default TeX-PDF-mode t)
-(setq TeX-command-default "XeLaTeX")
-(add-hook 'LaTeX-mode-hook 'linum-mode)
 #+end_src
 ** Note Related
 #+begin_src emacs-lisp
-(use-package org-roam
-  :ensure t
-  :custom
-  (make-directory "~/org-roam")
-  (setq org-roam-db-gc-threshold most-positive-fixnum)
-  (setq org-roam-directory "~/org-roam")
-  (setq org-roam-completion-everywhere t)
-  (setq org-roam-v2-ack t)
-  (setq org-roam-ui-mode nil)
-  (add-hook 'after-init-hook 'org-roam-mode)
-  :bind (("C-c n l" . org-roam-buffer-toggle)
-         ("C-c n f" . org-roam-node-find)
-         ("C-c n i" . org-roam-node-insert)
-         :map org-mode-map
-         ("C-M-i" . completion-at-point))
-  :config
-  (org-roam-setup)
-  (setq org-roam-capture-templates
-        '(("d" "default" plain "%?" :if-new
-           (file+head "%<%Y-%m-%d>-${slug}.org" "#+title: ${title}\n#+date: [%<%Y-%m-%d %H:%M>] \n#+last_modified: [%<%Y-%m-%d %H:%M>] \n\n* ${title}\n\n** 参考文档")
-           :unnarrowed t)
-          )
-        )
-  )
+  (use-package org-roam
+    :ensure t
+    :custom
+    (make-directory "~/org-roam")
+    (setq org-roam-db-gc-threshold most-positive-fixnum)
+    (setq org-roam-directory "~/org-roam")
+    (setq org-roam-completion-everywhere t)
+    (setq org-roam-v2-ack t)
+    (setq org-roam-ui-mode nil)
+    (add-hook 'after-init-hook 'org-roam-mode)
+    :bind (("C-c n l" . org-roam-buffer-toggle)
+	   ("C-c n f" . org-roam-node-find)
+	   ("C-c n i" . org-roam-node-insert)
+	   :map org-mode-map
+	   ("C-M-i" . completion-at-point))
+    :config
+    (org-roam-setup)
+    (setq org-roam-capture-templates
+	  '(("d" "default" plain "%?" :if-new
+	     (file+head "%<%Y-%m-%d>-${slug}.org" "#+title: ${title}\n#+date: [%<%Y-%m-%d %H:%M>] \n#+last_modified: [%<%Y-%m-%d %H:%M>] \n\n* ${title}\n\n** 参考文档")
+	     :unnarrowed t)
+	    )
+	  )
+    )
 
-(use-package deft
-  :ensure t
-  :defer t
-  :after org
-  :bind
-  ("C-c n d" . deft)
-  :custom
-  (deft-recursive t)
-  (deft-use-filter-string-for-filename t)
-  (deft-default-extension "org")
-  (deft-directory org-roam-directory))
+  (use-package deft
+    :ensure t
+    :defer t
+    :after org
+    :bind
+    ("C-c n d" . deft)
+    :custom
+    (deft-recursive t)
+    (deft-use-filter-string-for-filename t)
+    (deft-default-extension "org")
+    (deft-directory org-roam-directory))
 
 #+end_src
 ** Project Related
@@ -505,7 +348,7 @@ switch-window切换窗口比较好用
   :config
   (projectile-global-mode +1)
   (setq-default projectile-mode-line-prefix " Proj")
-  (setq projectile-enable-caching t)
+  (setq projectile-enable-caching nil)
   (when (executable-find "rg")
     (setq-default projectile-generic-command "rg --files --hidden"))
   (use-package ibuffer-projectile
@@ -608,6 +451,12 @@ go get golang.org/x/tools/gopls@latest
     :config
     (add-hook 'python-mode-hook 'yapf-mode))
 #+end_src
+** Groovy Related
+#+begin_src emacs-lisp
+  (use-package groovy-mode
+    :ensure t)
+#+end_src
+
 ** Angular Related
 #+begin_src emacs-lisp
 (use-package ng2-mode
@@ -664,18 +513,44 @@ terraform接触的比较多，整体用起来挺好的，主要对齐等比较�
   :ensure t
   :hook (nginx-mode . flycheck-mode))
 #+end_src
-** Lisp Related
+** Ansible Related
 #+begin_src emacs-lisp
-
+  (use-package ansible
+    :ensure t)
 #+end_src
+
 ** Yaml Related
 #+begin_src emacs-lisp
 (use-package yaml-mode
   :ensure t
-  :mode ("\\.yml\\.erb\\'" . yaml-mode)
+  :mode ("\\.yml\\'" . yaml-mode)
   :hook (yaml-mode-hook . goto-address-prog-mode)
 )
 #+end_src
+** Json Related
+#+begin_src emacs-lisp
+  (use-package json-mode
+    :ensure t)
+#+end_src
+
+** Jinja2 Related
+#+begin_src emacs-lisp
+  (use-package jinja2-mode
+    :ensure t)
+#+end_src
+
+** Rst Related
+#+begin_src emacs-lisp
+  (use-package ox-rst
+    :ensure t)
+#+end_src
+
+** Sphinx Related
+#+begin_src emacs-lisp
+  (use-package sphinx-mode
+    :ensure t)
+#+end_src
+
 ** PDF Related
 #+begin_src emacs-lisp
 (add-hook 'doc-view-mode-hook (lambda ()
@@ -708,8 +583,9 @@ C-x h选中歌单，按RET（回车），就加到歌单了
 #+begin_src emacs-lisp
   (use-package elfeed
     :ensure t
-    :init
-    (global-set-key (kbd "C-x w") 'elfeed)
+    :bind (("C-x w" . elfeed)
+	   :map elfeed-search-mode-map
+		("g" . elfeed-update))
     )
   (use-package elfeed-org
     :ensure t
@@ -739,65 +615,22 @@ https://blog.liuliancao.com/rss.xml
 http://www.cvedetails.com/vulnerability-feeds-form.php
 #+end_src
 
-** Email Related
+** Puppet Related
 #+begin_src emacs-lisp
-  (use-package with-proxy
+(use-package puppet-mode
     :ensure t)
-  (use-package gnus
-    :ensure t
-    :config
-    ;; gmail accounts
-    ;; (setq user-email-address "liuliancao@gmail.com")
-    ;; (setq user-full-name "liuliancao")
-    ;; (setq gnus-select-method
-    ;;       '(nnimap "gmail"
-    ;;                (nnimap-address "imap.gmail.com")
-    ;;                (nnimap-server-port 993)
-    ;;                (nnimap-stream ssl)))
-    ;; (setq smtpmail-smtp-server "smtp.gmail.com")
-    ;; (setq smtp-smtp-service 587)
-    ;; (setq message-mail-function 'smtpmail-send-it)
-    ;; (setq gnus-message-archive-group nil)
-    ;; (setq mml-secure-openpgp-encrypt-to-self t)
-    ;; (add-hook 'message-setup-hook 'mml-secure-message-encrypt)
-    (setq gnus-select-method
-      '(nnimap "qqmail"
-               (nnimap-address "imap.qq.com")
-               (nnimap-user "luqixue@qq.com") ;; atention nnimap-user must be full with @
-               (nnimap-server-port 993)
-               (nnimap-stream ssl)
-               ))
-     (setq send-mail-function 'smtpmail-send-it
-            user-mail-address "luqixue@qq.com"
-            user-full-name "lqx"
-            smtpmail-smtp-server "smtp.qq.com"
-            smtpmail-smtp-service 465
-            smtpmail-stream-type 'ssl
-            )
-      )
 #+end_src
 
-** Mermaid Workflow Related
-[[https://mermaid-js.github.io/mermaid/#/][mermaid官方文档]] mermaid是比较全面的绘图工具
-[[https://github.com/arnm/ob-mermaid/blob/master/README.org][ob-mermaid文档]]
-#+begin_src sh
-sudo npm install -g @mermaid-js/mermaid-cli
-#+end_src
+** Rime input Related
+使用C-\切换到emacs-rime输入法
 #+begin_src emacs-lisp
-  (use-package ob-mermaid
-	       :ensure t)
+  (use-package rime
+    :ensure t
+    :custom
+    (default-input-method "rime")
+    (setq rime-user-data-dir "~/.config/fcitx/rime")
+  )
 #+end_src
-
-#+begin_src mermaid :file ../mermaid-demo.png :theme forest
-   graph TD;
-       A-->B;
-       A-->C;
-       B-->D;
-       C-->D;  
-#+end_src
-
-#+RESULTS:
-[[file:../mermaid-demo.png]]
 
 ** Plantuml Related
 #+begin_src emacs-lisp
@@ -814,3 +647,4 @@ sudo npm install -g @mermaid-js/mermaid-cli
     :config
     (flycheck-plantuml-setup))
 #+end_src
+
