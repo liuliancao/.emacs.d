@@ -1,30 +1,35 @@
 #+title: liuliancao's emacs settings
 #+author: liuliancao
 #+email: liuliancao@gmail.com
-#+last_modified: [2022-04-20 09:31]
+#+last_modified: [2022-11-07 15:50]
 #+options: num:nil
 
 * Liuliancao's Emacs Settings
 ** Packages Related
 #+begin_src emacs-lisp
-(use-package package
-  :ensure nil
-  :config
-  (setq package-archives '(("gnu" . "http://mirrors.ustc.edu.cn/elpa/gnu/")
-			   ("melpa" . "http://mirrors.ustc.edu.cn/elpa/melpa/")
-			   ))
-  (package-initialize)
-  (unless (package-installed-p 'use-package)
-      (package-refresh-contents)
-      (package-install 'use-package))
-  )
-  (use-package diminish
-	:ensure t)
+  (use-package package
+    :ensure nil
+    :config
+    (setq package-archives '(("gnu" . "http://mirrors.ustc.edu.cn/elpa/gnu/")
+			     ("melpa" . "http://mirrors.ustc.edu.cn/elpa/melpa/")
+			     ("nongnu" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/nongnu/")
+			     ))
+    (package-initialize)
+    (unless (package-installed-p 'use-package)
+	(package-refresh-contents)
+	(package-install 'use-package))
+    )
+    (use-package diminish
+	  :ensure t)
 #+end_src
 ** Menus Related
 #+begin_src emacs-lisp
   ;;(setq-default auto-fill-function 'do-auto-fill)
   (setq inhibit-startup-screen t)
+  (tool-bar-mode t) 
+  (menu-bar-mode 0) 
+  (scroll-bar-mode t) 
+
   (use-package scratch
     :ensure t)
   (use-package command-log-mode
@@ -67,6 +72,11 @@
 ;; let eww visit url
 (setq browse-url-browser-function 'eww-browse-url)
 #+end_src
+** Dired Related
+#+begin_src emacs-lisp
+(setq dired-dwim-target t)
+#+end_src
+
 ** Tmp file Related
 否则会在目录下面生成临时文件
 #+begin_src emacs-lisp
@@ -169,10 +179,16 @@
     (setq ivy-count-format "%d/%d")
     (setq ivy-re-builders-alist '((t . ivy--regex-ignore-order))))
 
+  (use-package ivy-rich
+    :ensure t
+    :after ivy
+    :init
+    (ivy-rich-mode 1)
+  )
   (use-package counsel
     :ensure t
     :bind (("M-x" . counsel-M-x)
-           ("C-x C-f" . counsel-find-file)))
+	   ("C-x C-f" . counsel-find-file)))
 
   (use-package swiper
     :ensure t
@@ -193,10 +209,27 @@
     :config
     (add-hook 'after-init-hook 'which-key-mode)
     )
+
+  ;; history more use
+  (use-package amx
+    :ensure t
+    :init (amx-mode))
 #+end_src
 ** Org mode Related
+:PROPERTIES:
+:DIR:      /home/liuliancao/Documents/notes/
+:END:
 #+begin_src emacs-lisp
   (org-reload)
+
+  (use-package org-appear
+    :ensure t
+    :config
+    (add-hook 'org-mode-hook 'org-appear-mode)
+    (setq org-appear-autolinks t)
+    (setq org-hide-emphasis-markers t)
+    )
+
   (with-eval-after-load 'org-agenda
     ;;(setq org-agenda-files (find-lisp-find-files "~/todo/" "\.org$"))
     (setq org-agenda-files (list "~/todo/inbox.org"
@@ -225,7 +258,7 @@
 	org-todo-repeat-to-state "NEXT")
 
   (add-hook 'org-agenda-mode-hook 'hl-line-mode)
-
+  (add-hook 'org-mode-hook 'auto-fill-mode)
   (use-package ob-go
     :ensure t)
   (use-package ob-http
@@ -257,6 +290,8 @@
   ;; add support export markdown
   (with-eval-after-load 'org
     (require 'ox-md nil t)
+    (require 'ox-freemind)
+    (setq org-freemind-section-format 'node)
     (use-package org-re-reveal
       :ensure t
       :config
@@ -296,8 +331,36 @@
     (setq habitica-uid (getenv "HABITICA_UID"))
     (setq habitica-token (getenv "HABITICA_TOKEN"))
     )
+  (use-package org-contrib
+    :ensure t)
+
+  (use-package ox-pandoc
+    :ensure t
+    :config
+    (setq org-pandoc-options-for-latex-pdf '((pdf-engine . "xelatex"))))
+
+    (use-package org-download
+      :ensure t
+      :config
+      (setq-default org-download-image-dir "./images")
+      )
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package org-noter
+    :ensure t
+    :config
+    ;;(setq org-noter-search-path "~/Documents")
+    )
+
+  (use-package org-anki
+    :ensure t
+    :config
+    (setq org-anki-default-deck "测试deck")
+    )
 
 #+end_src
+
 ** Note Related
 #+begin_src emacs-lisp
   (use-package org-roam
@@ -421,19 +484,20 @@ go get golang.org/x/tools/gopls@latest
     (use-package python
       :ensure t
       :mode ("\\.py\\'" . python-mode)
-      :hook (python-mode . lsp-deferred)
+      ;;:hook (python-mode . lsp-deferred)
+      :hook (python-mode . eglot-ensure)
       :interpreter ("python" . python-mode)
       :config
       (setq indent-tabs-mode nil)
       (setq python-indent-offset 4)
       (use-package py-autopep8
-        :ensure t
-        :hook ((python-mode . py-autopep8-enable-on-save)))
+	:ensure t
+	:hook ((python-mode . py-autopep8-enable-on-save)))
       (use-package company-jedi
-        :ensure t
-        :config
-        (add-hook 'python-mode-hook 'jedi:setup)
-        )
+	:ensure t
+	:config
+	(add-hook 'python-mode-hook 'jedi:setup)
+	)
       )
 
     (use-package elpy
@@ -450,6 +514,13 @@ go get golang.org/x/tools/gopls@latest
     :ensure t
     :config
     (add-hook 'python-mode-hook 'yapf-mode))
+
+    (use-package zeal-at-point
+      :ensure t
+      :config
+      (add-hook 'python-mode-hook
+     (lambda () (setq zeal-at-point-docset '("python" "django"))))
+      )
 #+end_src
 ** Groovy Related
 #+begin_src emacs-lisp
@@ -459,9 +530,34 @@ go get golang.org/x/tools/gopls@latest
 
 ** Angular Related
 #+begin_src emacs-lisp
-(use-package ng2-mode
+  (use-package ng2-mode
+    :ensure t)
+  ;; https://github.com/ananthakumaran/tide
+  (use-package tide
+    :ensure t
+    :after (typescript-mode company flycheck)
+    :hook ((typescript-mode . tide-setup)
+	   (typescript-mode . tide-hl-identifier-mode)
+	   (before-save . tide-format-before-save)))
+  (use-package web-mode
+    :ensure t
+    :config
+    (add-to-list 'auto-mode-alist '("\\.html\\'" . web-mode))
+    (setq web-mode-markup-indent-offset 2)
+    (setq web-mode-css-indent-offset 2)
+    (setq web-mode-enable-current-element-highlight t)
+    (setq web-mode-enable-current-column-highlight nil)
+    (set-face-attribute 'web-mode-html-tag-face nil :foreground "Blue")
+    (set-face-attribute 'web-mode-html-attr-name-face nil :foreground "Purple")
+    (set-face-attribute 'web-mode-doctype-face nil :foreground "Blue")
+  )
+#+end_src
+** Eglot Related
+#+begin_src emacs-lisp
+(use-package eglot
   :ensure t)
 #+end_src
+
 ** Lsp Related
 我使用lsp的原因是它是一个框架，整体比较简单，C、Go、Python配置起来都不难
 #+begin_src emacs-lisp
@@ -484,8 +580,7 @@ go get golang.org/x/tools/gopls@latest
         "#!/usr/bin/env python3" \n
         "# -*- coding: utf-8 -*-" \n
         "# Date: " (substring (current-time-string)) \n
-        "# Author: " (progn user-full-name) " <lqx@wooduan.com>" \n
-        "# Copyright (c) @wooduan-ops" \n
+        "# Author: " (progn user-full-name) " <liuliancao@gmail.com>" \n
         "\"\"\"Description: something.\"\"\"" \n \n
         ))
     )
@@ -493,19 +588,24 @@ go get golang.org/x/tools/gopls@latest
 ** Terraform Related
 terraform接触的比较多，整体用起来挺好的，主要对齐等比较方便
 #+begin_src emacs-lisp
-(use-package terraform-mode
-  :ensure t
-  :hook (terraform-mode . flycheck-mode)
-  :config
-  (use-package company-terraform
-  :ensure t)
-  (use-package reformatter
-  :ensure t
-  :config
-  (reformatter-define terraform-format
-    :program "terraform" :args '("fmt" "-"))
+  (use-package terraform-mode
+    :ensure t
+    :hook (terraform-mode . flycheck-mode)
+    :config
+    (use-package company-terraform
+    :ensure t
+    :config
+    (company-terraform-init)
+    )
+    (use-package terraform-doc
+      :ensure t)
+    (use-package reformatter
+    :ensure t
+    :config
+    (reformatter-define terraform-format
+      :program "terraform" :args '("fmt" "-"))
+    )
   )
-)
 #+end_src
 ** Nginx mode Related
 #+begin_src emacs-lisp
@@ -617,19 +717,30 @@ http://www.cvedetails.com/vulnerability-feeds-form.php
 
 ** Puppet Related
 #+begin_src emacs-lisp
-(use-package puppet-mode
-    :ensure t)
+  (use-package puppet-mode
+    :ensure t
+  )
 #+end_src
 
 ** Rime input Related
-使用C-\切换到emacs-rime输入法
 #+begin_src emacs-lisp
-  (use-package rime
-    :ensure t
-    :custom
-    (default-input-method "rime")
-    (setq rime-user-data-dir "~/.config/fcitx/rime")
-  )
+  ;; (use-package rime
+  ;;     :ensure t
+  ;;     :config
+  ;;     (setq default-input-method "rime")
+  ;;     (setq rime-show-candidate 'popup)
+  ;;     (setq rime-posframe-properties
+  ;; 	  (list :background-color "#333333"
+  ;; 		:foreground-color "#dcdccc"
+  ;; 		:font "WenQuanYi Micro Hei Mono-14"
+  ;; 		:internal-border-width 10))
+  ;;     (setq rime-disable-predicates
+  ;;     '(rime-predicate-after-alphabet-char-p
+  ;;       rime-predicate-prog-in-code-p
+  ;;       rime-predicate-space-after-cc-p
+  ;;       )
+  ;;     )
+  ;; )
 #+end_src
 
 ** Plantuml Related
@@ -648,3 +759,53 @@ http://www.cvedetails.com/vulnerability-feeds-form.php
     (flycheck-plantuml-setup))
 #+end_src
 
+** Jira Related
+#+begin_src emacs-lisp
+  ;; (use-package org-jira
+  ;;   :ensure t
+  ;;   :config
+  ;;   ;;(make-directory "~/.org-jira")
+  ;;   (setq jiralib-url "http://jira.wd.com")
+  ;;   )
+#+end_src
+
+** Undo Related
+#+begin_src emacs-lisp
+  (use-package undo-tree
+    :ensure t
+    :diminish t
+    :config
+     (global-undo-tree-mode)
+    )
+#+end_src
+
+** Translate Related
+#+begin_src emacs-lisp
+  (use-package go-translate
+    :ensure t
+    :config
+    (setq gts-translate-list '(("en" "zh")))
+    (setq gts-default-translator
+	(gts-translator
+	 :picker (gts-prompt-picker)
+	 :engines (list (gts-bing-engine) (gts-google-engine))
+	 :render (gts-buffer-render)))
+    (global-set-key "\C-ct" 'gts-do-translate)
+  )
+#+end_src
+
+
+** Telegram Related
+#+begin_src emacs-lisp
+  (use-package telega
+    :ensure t
+    :config
+    (setq telega-proxies
+	(list '(:server "127.0.0.1" :port 1089 :enable t
+			:type (:@type "proxyTypeSocks5"))))
+    (add-hook 'telega-load-hook 'telega-autoplay-mode)
+    (add-hook 'telega-load-hook 'telega-appindicator-mode)
+    (setq telega-sticker-animated-play t)
+    )
+
+#+end_src
