@@ -1,7 +1,7 @@
 #+title: liuliancao's emacs settings
 #+author: liuliancao
 #+email: liuliancao@gmail.com
-#+last_modified: [2022-11-07 15:50]
+#+last_modified: [2023-02-21 11:19]
 #+options: num:nil
 
 * Liuliancao's Emacs Settings
@@ -10,10 +10,13 @@
   (use-package package
     :ensure nil
     :config
-    (setq package-archives '(("gnu" . "http://mirrors.ustc.edu.cn/elpa/gnu/")
-			     ("melpa" . "http://mirrors.ustc.edu.cn/elpa/melpa/")
-			     ("nongnu" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/nongnu/")
+    ;; (setq package-archives '(("gnu" . "http://mirrors.ustc.edu.cn/elpa/gnu/")
+    ;; 			   ("melpa" . "http://mirrors.ustc.edu.cn/elpa/melpa/")
+    ;; 			   ("nongnu" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/nongnu/")
+    ;; 			   ))
+  (setq package-archives '(("melpa" . "http://mirrors.ustc.edu.cn/elpa/melpa/")
 			     ))
+  
     (package-initialize)
     (unless (package-installed-p 'use-package)
 	(package-refresh-contents)
@@ -232,12 +235,15 @@
 
   (with-eval-after-load 'org-agenda
     ;;(setq org-agenda-files (find-lisp-find-files "~/todo/" "\.org$"))
-    (setq org-agenda-files (list "~/todo/inbox.org"
+    (setq org-agenda-files (list "~/todo/ssjj2.org"
+				 "~/todo/cf.org"
+				 "~/todo/public.org"
 				 "~/todo/done.org"
-				 "~/todo/task.org"
-				 "~/todo/project.org"))
+				 "~/todo/personal.org"
+				 "~/todo/project.org"
+				 ))
 
-    (setq org-default-notes-file "~/todo/task.org")
+    (setq org-default-notes-file "~/todo/ssjj2.org")
     )
   (use-package org-cliplink
     :ensure t)
@@ -258,6 +264,7 @@
 	org-todo-repeat-to-state "NEXT")
 
   (add-hook 'org-agenda-mode-hook 'hl-line-mode)
+  (setq org-agenda-show-window "only-window")
   (add-hook 'org-mode-hook 'auto-fill-mode)
   (use-package ob-go
     :ensure t)
@@ -430,16 +437,18 @@ magit相关
   :after
   (fullframe magit-status magit-mode-quit-window))
 #+end_src
-** C/C++ Related
+** C/C++/C# Related
 lsp-mode的后端有cquery, clangd, ccls，我用的ccls(https://github.com/MaskRay/ccls/wiki/lsp-mode)
 
 就是你启用的哪个，lsp会从里面遍历
 #+begin_src emacs-lisp
-(use-package ccls
-  :ensure t
-  :hook ((c-mode c++-mode objec-mode cuda-mode) . (lambda () (require 'ccls) (lsp))))
-(use-package xcscope
-:ensure t)
+  (use-package ccls
+    :ensure t
+    :hook ((c-mode c++-mode objec-mode cuda-mode) . (lambda () (require 'ccls) (lsp))))
+  (use-package xcscope
+  :ensure t)
+  (use-package omnisharp
+    :ensure t)
 #+end_src
 ** Golang Related
 安装gopls
@@ -485,7 +494,7 @@ go get golang.org/x/tools/gopls@latest
       :ensure t
       :mode ("\\.py\\'" . python-mode)
       ;;:hook (python-mode . lsp-deferred)
-      :hook (python-mode . eglot-ensure)
+      ;;:hook (python-mode . eglot-ensure)
       :interpreter ("python" . python-mode)
       :config
       (setq indent-tabs-mode nil)
@@ -554,8 +563,14 @@ go get golang.org/x/tools/gopls@latest
 #+end_src
 ** Eglot Related
 #+begin_src emacs-lisp
-(use-package eglot
-  :ensure t)
+  (use-package eglot
+    :ensure t
+    :config
+    (add-hook 'python-mode-hook 'eglot-ensure)
+    (add-hook 'ansible-mode-hook 'eglot-ensure)
+    (add-hook 'yaml-mode-hook 'eglot-ensure)
+    (add-hook 'shell-script-mode 'eglot-sure)
+    )
 #+end_src
 
 ** Lsp Related
@@ -614,9 +629,14 @@ terraform接触的比较多，整体用起来挺好的，主要对齐等比较�
   :hook (nginx-mode . flycheck-mode))
 #+end_src
 ** Ansible Related
+please install ansible-language-server, [[https://emacs-lsp.github.io/lsp-mode/page/lsp-ansible/][reference link]]
+#+begin_src sh
+sudo npm i -g @ansible/ansible-language-server
+#+end_src
 #+begin_src emacs-lisp
-  (use-package ansible
-    :ensure t)
+    (use-package ansible
+      :ensure t
+      )
 #+end_src
 
 ** Yaml Related
@@ -764,7 +784,7 @@ http://www.cvedetails.com/vulnerability-feeds-form.php
   ;; (use-package org-jira
   ;;   :ensure t
   ;;   :config
-  ;;   ;;(make-directory "~/.org-jira")
+  ;;   ;; (make-directory "~/.org-jira")
   ;;   (setq jiralib-url "http://jira.wd.com")
   ;;   )
 #+end_src
@@ -776,22 +796,35 @@ http://www.cvedetails.com/vulnerability-feeds-form.php
     :diminish t
     :config
      (global-undo-tree-mode)
+     (setq undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo")))
     )
 #+end_src
 
 ** Translate Related
 #+begin_src emacs-lisp
-  (use-package go-translate
+    (use-package go-translate
+      :ensure t
+      :config
+      (setq gts-translate-list '(("en" "zh")))
+      (setq gts-default-translator
+	  (gts-translator
+	   :picker (gts-prompt-picker)
+	   :engines (list (gts-bing-engine) (gts-google-engine))
+	   :render (gts-buffer-render)))
+      (global-set-key "\C-ct" 'gts-do-translate)
+    )
+  ;; Default, comment out the providers you don't need.
+  (use-package fanyi
     :ensure t
-    :config
-    (setq gts-translate-list '(("en" "zh")))
-    (setq gts-default-translator
-	(gts-translator
-	 :picker (gts-prompt-picker)
-	 :engines (list (gts-bing-engine) (gts-google-engine))
-	 :render (gts-buffer-render)))
-    (global-set-key "\C-ct" 'gts-do-translate)
-  )
+    :custom
+    (fanyi-providers '(;; 海词
+		       fanyi-haici-provider
+		       ;; 有道同义词词典
+		       fanyi-youdao-thesaurus-provider
+		       ;; Etymonline
+		       fanyi-etymon-provider
+		       ;; Longman
+		       fanyi-longman-provider)))
 #+end_src
 
 
